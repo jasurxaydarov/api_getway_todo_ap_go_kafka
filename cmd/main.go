@@ -1,21 +1,31 @@
 package main
 
 import (
-	"github.com/jasurxaydarov/api_getway_todo_ap_go_kafka/api"
-	"github.com/jasurxaydarov/api_getway_todo_ap_go_kafka/event"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/jasurxaydarov/api_getway_todo_ap_go_kafka/graphql/resolvers"
+	"github.com/jasurxaydarov/api_getway_todo_ap_go_kafka/graphql/schema"
 )
 
-func main(){
-	event:=event.NewEvent()
+const defaultPort = "8081"
 
-	router:=api.Api(
-		api.Options{
-			Event: event,
-		},
-	)
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
 
-	router.Start(":8080")
-	
+	srv := handler.NewDefaultServer(schema.NewExecutableSchema(schema.Config{Resolvers: &resolvers.Resolver{}}))
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", srv)
+
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-
+/*	*/
